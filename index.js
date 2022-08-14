@@ -27,36 +27,39 @@ const coinCheck = new CoinCheck.CoinCheck(COINBASE_ACCESS_KEY, COINBASE_SECRET_K
 
 const params = {
   options: {
-    success: (data, response, params) => {
+    success: async (data, response, params) => {
 
-      const data_json = JSON.parse(data)
+      try {
+        const { success: _, ...currency_balances } = JSON.parse(data)
 
-      const url = `https://coincheck.com/api/rate/all`
-      axios.get(url)
-      .then(response => {
+        const { data: { jpy: jpy_rates } } = await axios.get(`https://coincheck.com/api/rate/all`)
 
-        const rates = response.data.jpy
+        const total = Object.keys(currency_balances).reduce((prev, key) => {
+          const balance = currency_balances[key]
+          const rate = jpy_rates[key]
+          if (rate) return prev + balance * rate
+          else return prev
 
-        let total = 0
+        }, 0)
 
-        // TODO: use reduce
-        for (let currency in data_json) {
-          const amount = Number(data_json[currency])
-          const rate = rates[currency]
-          if(rate) total += amount*rate
-        }
+        await register_balance(total)
 
-        register_balance(total)
+        console.log(`Registration successful: JPY ${total}`)
 
-      })
-      .catch(error => {
-        console.log(error)
-      })
+        success = true
+      } catch (error) {
+        success = false
+      }
+
+      
+
 
 
     },
     error: (error, response, params) => {
-      console.log(error)
+      console.error(error)
+      success = false
+
     }
   }
 }
@@ -81,7 +84,9 @@ app.get('/', (req, res) => {
     finances_api: {
       url: finance_api_url,
       account: finance_api_account,
-    }
+    },
+    success,
+
   })
 })
 

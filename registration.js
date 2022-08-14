@@ -26,13 +26,8 @@ exports.register_balance = (balance) => {
     timeout: 3000,
   }
 
-  axios.post(url,payload,options)
-  .then(response => {
-    console.log(`[Balance] Balance registered successfully: ${currency} ${balance}`)
-  })
-  .catch(error => {
-    console.log(error)
-  })
+  return axios.post(url,payload,options)
+
 }
 
 
