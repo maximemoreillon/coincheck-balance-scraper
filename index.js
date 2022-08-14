@@ -1,14 +1,25 @@
 const dotenv = require('dotenv')
 const CoinCheck = require('coincheck')
 const axios = require('axios')
-const registration = require('./registration')
+const {
+  register_balance,
+  finance_api_url,
+  finance_api_account,
+} = require('./registration.js')
 const schedule = require ('node-schedule');
+const express = require('express')
+const cors = require('cors')
+const { version } = require('./package.json')
 
 dotenv.config()
 
+process.env.TZ = 'Asia/Tokyo'
+
 const {
   COINBASE_ACCESS_KEY,
-  COINBASE_SECRET_KEY
+  COINBASE_SECRET_KEY,
+  PORT = 80
+
 } = process.env
 
 
@@ -35,7 +46,7 @@ const params = {
           if(rate) total += amount*rate
         }
 
-        registration.register_balance(total)
+        register_balance(total)
 
       })
       .catch(error => {
@@ -55,3 +66,25 @@ schedule.scheduleJob('0 */12 * * *', () => {
 })
 
 coinCheck.account.balance(params)
+
+
+
+const app = express()
+
+app.use(cors())
+app.use(express.json())
+
+app.get('/', (req, res) => {
+  res.send({
+    application_name: 'Coincheck scraper',
+    version,
+    finances_api: {
+      url: finance_api_url,
+      account: finance_api_account,
+    }
+  })
+})
+
+app.listen(PORT, () => {
+  console.log(`Express listening on port ${PORT}`)
+})

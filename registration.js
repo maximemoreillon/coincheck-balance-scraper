@@ -34,3 +34,7 @@ exports.register_balance = (balance) => {
     console.log(error)
   })
 }
+
+
+exports.finance_api_url = FINANCES_API_URL
+exports.finance_api_account = FINANCES_API_ACCOUNT_NAME
