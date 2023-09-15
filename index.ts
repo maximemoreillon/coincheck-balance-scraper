@@ -1,9 +1,10 @@
-const dotenv = require("dotenv")
-const CoinCheck = require("coincheck")
-const axios = require("axios")
-const { register_balance } = require("./registration.js")
+import dotenv from "dotenv"
+// @ts-ignore
+import CoinCheck from "coincheck"
+import axios from "axios"
+import { register_balance } from "./registration"
 
-const { version } = require("./package.json")
+import { version } from "./package.json"
 
 dotenv.config()
 
@@ -20,7 +21,7 @@ const coinCheck = new CoinCheck.CoinCheck(
 
 const params = {
   options: {
-    success: async (data, response, params) => {
+    success: async (data: any, response: any, params: any) => {
       const { success: _, ...currency_balances } = JSON.parse(data)
 
       const {
@@ -38,9 +39,8 @@ const params = {
 
       console.log(`Registration successful: JPY ${total}`)
     },
-    error: (error, response, params) => {
+    error: (error: any, response: any, params: any) => {
       console.error(error)
-      success = false
     },
   },
 }
