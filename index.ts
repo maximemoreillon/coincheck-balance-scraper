@@ -3,7 +3,7 @@ import dotenv from "dotenv"
 import CoinCheck from "coincheck"
 import axios from "axios"
 import { register_balance } from "./registration"
-
+import { logger } from "./logger"
 import { version } from "./package.json"
 
 dotenv.config()
@@ -19,29 +19,49 @@ const coinCheck = new CoinCheck.CoinCheck(
   COINBASE_SECRET_KEY
 )
 
+const convertToJpy = async (currency_balances: any) => {
+  const {
+    data: { jpy: jpy_rates },
+  } = await axios.get(`https://coincheck.com/api/rate/all`)
+
+  return Object.keys(currency_balances).reduce((prev, key) => {
+    const balance = currency_balances[key]
+    const rate = jpy_rates[key]
+    if (rate) return prev + balance * rate
+    else return prev
+  }, 0)
+}
+
+const successHandler = async (data: any, response: any, params: any) => {
+  try {
+    const { success: _, ...currency_balances } = JSON.parse(data)
+
+    const totalJpy = await convertToJpy(currency_balances)
+
+    await register_balance(totalJpy)
+
+    logger.info({
+      message: `Successfully scraped balance`,
+    })
+  } catch (error) {
+    logger.error({
+      message: `Scraping failed`,
+    })
+    throw error
+  }
+}
+
+const errorHandler = (error: any, response: any, params: any) => {
+  logger.error({
+    message: `Scraping failed`,
+  })
+  throw error
+}
+
 const params = {
   options: {
-    success: async (data: any, response: any, params: any) => {
-      const { success: _, ...currency_balances } = JSON.parse(data)
-
-      const {
-        data: { jpy: jpy_rates },
-      } = await axios.get(`https://coincheck.com/api/rate/all`)
-
-      const total = Object.keys(currency_balances).reduce((prev, key) => {
-        const balance = currency_balances[key]
-        const rate = jpy_rates[key]
-        if (rate) return prev + balance * rate
-        else return prev
-      }, 0)
-
-      await register_balance(total)
-
-      console.log(`Registration successful: JPY ${total}`)
-    },
-    error: (error: any, response: any, params: any) => {
-      console.error(error)
-    },
+    success: successHandler,
+    error: errorHandler,
   },
 }
 
