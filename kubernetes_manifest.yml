@@ -12,6 +12,9 @@ spec:
           containers:
             - name: ${APPLICATION_NAME}
               image: ${CONTAINER_IMAGE_TAGGED}
+              env:
+                - name: LOKI_URL
+                  value: http://loki:3100
               envFrom:
                 - secretRef:
                     name: coincheck-scraper
