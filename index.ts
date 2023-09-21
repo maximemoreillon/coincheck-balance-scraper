@@ -35,9 +35,7 @@ const convertToJpy = async (currency_balances: any) => {
 const successHandler = async (data: any, response: any, params: any) => {
   try {
     const { success: _, ...currency_balances } = JSON.parse(data)
-
     const totalJpy = await convertToJpy(currency_balances)
-
     await register_balance(totalJpy)
 
     logger.info({
@@ -48,6 +46,8 @@ const successHandler = async (data: any, response: any, params: any) => {
       message: `Scraping failed`,
     })
     throw error
+  } finally {
+    logger.close()
   }
 }
 
