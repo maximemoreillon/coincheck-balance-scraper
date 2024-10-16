@@ -3,11 +3,11 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-const { FINANCES_API_ACCOUNT_NAME, FINANCES_API_TOKEN, FINANCES_API_URL } =
+const { FINANCES_API_ACCOUNT_ID, FINANCES_API_TOKEN, FINANCES_API_URL } =
   process.env
 
 export const register_balance = (balance: number) => {
-  const url = `${FINANCES_API_URL}/accounts/${FINANCES_API_ACCOUNT_NAME}/balance`
+  const url = `${FINANCES_API_URL}/accounts/${FINANCES_API_ACCOUNT_ID}/balance`
 
   const currency = "JPY"
 
