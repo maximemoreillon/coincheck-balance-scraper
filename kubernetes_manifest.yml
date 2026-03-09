@@ -4,6 +4,7 @@ metadata:
   name: ${APPLICATION_NAME}
 spec:
   schedule: "15 16 * * *"
+  successfulJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:
