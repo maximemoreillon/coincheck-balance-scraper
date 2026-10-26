@@ -7,9 +7,10 @@ spec:
   successfulJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 0
       template:
         spec:
-          restartPolicy: OnFailure
+          restartPolicy: Never
           containers:
             - name: ${APPLICATION_NAME}
               image: ${CONTAINER_IMAGE_TAGGED}

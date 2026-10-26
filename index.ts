@@ -5,7 +5,6 @@ dotenv.config();
 import CoinCheck from "coincheck";
 import axios from "axios";
 import { register_balance } from "./registration";
-import { logger } from "./logger";
 import { version } from "./package.json";
 
 process.env.TZ = "Asia/Tokyo";
@@ -33,28 +32,16 @@ const convertToJpy = async (currency_balances: any) => {
 };
 
 const successHandler = async (data: any, response: any, params: any) => {
-  try {
-    const { success: _, ...currency_balances } = JSON.parse(data);
-    const totalJpy = await convertToJpy(currency_balances);
-    await register_balance(totalJpy);
+  const { success, ...currency_balances } = JSON.parse(data);
+  // Otherwise no currency matches a rate and a balance of 0 gets registered
+  if (!success) throw `Unsuccessful balance response: ${data}`;
+  const totalJpy = await convertToJpy(currency_balances);
+  await register_balance(totalJpy);
 
-    logger.info({
-      message: `Successfully scraped balance`,
-    });
-  } catch (error) {
-    logger.error({
-      message: `Scraping failed`,
-    });
-    throw error;
-  } finally {
-    logger.close();
-  }
+  console.log(`Successfully scraped balance`);
 };
 
 const errorHandler = (error: any, response: any, params: any) => {
-  logger.error({
-    message: `Scraping failed`,
-  });
   throw error;
 };
 
