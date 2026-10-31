@@ -6,10 +6,11 @@ import CoinCheck from "coincheck";
 import axios from "axios";
 import { register_balance } from "./registration";
 import { version } from "./package.json";
+import { logger } from "./logger";
 
 process.env.TZ = "Asia/Tokyo";
 
-console.log(`Coincheck scraper v${version}`);
+logger.info(`Coincheck scraper v${version}`);
 
 const { COINBASE_ACCESS_KEY, COINBASE_SECRET_KEY } = process.env;
 
@@ -31,18 +32,27 @@ const convertToJpy = async (currency_balances: any) => {
   }, 0);
 };
 
-const successHandler = async (data: any, response: any, params: any) => {
-  const { success, ...currency_balances } = JSON.parse(data);
-  // Otherwise no currency matches a rate and a balance of 0 gets registered
-  if (!success) throw `Unsuccessful balance response: ${data}`;
-  const totalJpy = await convertToJpy(currency_balances);
-  await register_balance(totalJpy);
+const failureHandler = (error: unknown) => {
+  logger.error({ err: error }, "Scrape and register failed");
+  process.exit(1);
+};
 
-  console.log(`Successfully scraped balance`);
+const successHandler = async (data: any, response: any, params: any) => {
+  try {
+    const { success, ...currency_balances } = JSON.parse(data);
+    // Otherwise no currency matches a rate and a balance of 0 gets registered
+    if (!success) throw new Error(`Unsuccessful balance response: ${data}`);
+    const totalJpy = await convertToJpy(currency_balances);
+    logger.info({ balance: totalJpy }, "Balance scraped");
+    await register_balance(totalJpy);
+    logger.info("Balance registered");
+  } catch (error) {
+    failureHandler(error);
+  }
 };
 
 const errorHandler = (error: any, response: any, params: any) => {
-  throw error;
+  failureHandler(error);
 };
 
 const params = {
